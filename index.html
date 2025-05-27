@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Controle de Estoque SBB ✨</title>
+
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#007AFF"/> <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="./icons/icon-192x192.png"> <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <div id="toast-container"></div>
+
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-warehouse"></i> Controle de Estoque SBB</h1>
+            <button id="theme-toggle" data-tooltip="Alternar Tema"><i class="fas fa-moon"></i> <span id="theme-text">Tema Escuro</span></button>
+        </header>
+
+        <div class="dashboard">
+            <div class="dashboard-item" id="db-total-products" data-tooltip="Total de tipos de produtos">
+                <i class="fas fa-boxes"></i>
+                <p>Produtos Únicos</p>
+                <span id="total-products-db">0</span>
+            </div>
+            <div class="dashboard-item clickable" id="db-total-value" data-tooltip="Valor total de todos os itens em estoque">
+                <i class="fas fa-dollar-sign"></i>
+                <p>Valor Total do Estoque</p>
+                <span id="total-value-db">R$ 0,00</span>
+            </div>
+            <div class="dashboard-item clickable" id="db-low-stock-count" data-tooltip="Clique para filtrar produtos com estoque baixo">
+                <i class="fas fa-exclamation-triangle"></i>
+                <p>Estoque Baixo</p>
+                <span id="low-stock-count-db">0</span>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h2><i class="fas fa-edit"></i> <span id="form-title">Adicionar Novo Produto</span></h2>
+            <form id="product-form" novalidate>
+                <input type="hidden" id="product-id">
+
+                <div class="form-group">
+                    <label for="product-name">Nome do Produto:</label>
+                    <input type="text" id="product-name" required>
+                    <small class="error-message"></small>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="product-category">Categoria:</label>
+                        <select id="product-category">
+                            <option value="">Selecione</option>
+                            <option value="Eletrônicos">Eletrônicos</option>
+                            <option value="Alimentos">Alimentos</option>
+                            <option value="Roupas">Roupas</option>
+                            <option value="Livros">Livros</option>
+                            <option value="Ferramentas">Ferramentas</option>
+                            <option value="Outros">Outros</option>
+                        </select>
+                        <small class="error-message"></small>
+                    </div>
+                    <div class="form-group">
+                        <label for="product-price">Preço Unitário (R$):</label>
+                        <input type="number" id="product-price" min="0" step="0.01" required placeholder="Ex: 25.99">
+                        <small class="error-message"></small>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="product-quantity">Quantidade em Estoque:</label>
+                        <input type="number" id="product-quantity" min="0" required>
+                        <small class="error-message"></small>
+                    </div>
+                    <div class="form-group">
+                        <label for="product-min-stock">Estoque Mínimo Ideal:</label>
+                        <input type="number" id="product-min-stock" min="0" value="5" required>
+                        <small class="error-message"></small>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="product-image">URL da Imagem (Opcional):</label>
+                    <input type="url" id="product-image" placeholder="https://exemplo.com/imagem.png">
+                    <small class="error-message"></small>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" id="btn-save-product" class="btn-primary" data-tooltip="Salvar alterações ou novo produto">
+                        <i class="fas fa-save"></i> <span class="btn-text">Salvar Produto</span>
+                    </button>
+                    <button type="button" id="btn-clear-form" class="btn-secondary" data-tooltip="Limpar todos os campos do formulário">
+                        <i class="fas fa-eraser"></i> <span class="btn-text">Limpar</span>
+                    </button>
+                    <button type="button" id="btn-cancel-edit" class="btn-danger" style="display:none;" data-tooltip="Cancelar edição e limpar formulário">
+                        <i class="fas fa-times-circle"></i> <span class="btn-text">Cancelar Edição</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <div class="controls-section">
+             <h2><i class="fas fa-tasks"></i> Gerenciar Estoque</h2>
+            <div class="filter-sort-search-container">
+                <div class="control-group">
+                    <label for="search-input"><i class="fas fa-search"></i> Buscar:</label>
+                    <input type="text" id="search-input" placeholder="Nome, categoria...">
+                </div>
+                <div class="control-group">
+                    <label for="category-filter"><i class="fas fa-filter"></i> Filtrar Categoria:</label>
+                    <select id="category-filter">
+                        <option value="">Todas</option>
+                        <option value="Eletrônicos">Eletrônicos</option>
+                        <option value="Alimentos">Alimentos</option>
+                        <option value="Roupas">Roupas</option>
+                        <option value="Livros">Livros</option>
+                         <option value="Ferramentas">Ferramentas</option>
+                        <option value="Outros">Outros</option>
+                        <option value="--LOW-STOCK--">Apenas Estoque Baixo</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label for="sort-by"><i class="fas fa-sort-amount-down"></i> Ordenar por:</label>
+                    <select id="sort-by">
+                        <option value="added-desc">Mais Recentes</option>
+                        <option value="name-asc">Nome (A-Z)</option>
+                        <option value="name-desc">Nome (Z-A)</option>
+                        <option value="price-desc">Maior Preço</option>
+                        <option value="price-asc">Menor Preço</option>
+                        <option value="quantity-desc">Maior Quantidade</option>
+                        <option value="quantity-asc">Menor Quantidade</option>
+                        <option value="value-desc">Maior Valor em Estoque</option>
+                         <option value="value-asc">Menor Valor em Estoque</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="product-list-section">
+            <div id="product-list-container" role="region" aria-live="polite">
+                </div>
+            <div id="empty-state-message" class="empty-state" style="display:none;">
+                <i class="fas fa-box-open fa-3x"></i>
+                <p>Seu estoque está vazio!</p>
+                <button id="add-first-product-btn" class="btn-primary"><i class="fas fa-plus-circle"></i> Adicionar Primeiro Produto</button>
+            </div>
+            <div class="pagination">
+                <button id="prev-page" class="btn-pagination" disabled data-tooltip="Página Anterior"><i class="fas fa-chevron-left"></i></button>
+                <span id="current-page-info" role="status">Página 1 de 1</span>
+                <button id="next-page" class="btn-pagination" disabled data-tooltip="Próxima Página"><i class="fas fa-chevron-right"></i></button>
+            </div>
+        </div>
+
+        <footer>
+            <p>&copy; <span id="current-year"></span> Controle de Estoque SBB. Todos os direitos reservados.</p>
+        </footer>
+    </div>
+
+    <div id="history-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="history-modal-title" style="display:none;">
+        <div class="modal-content">
+            <button class="close-button" data-tooltip="Fechar (Esc)" aria-label="Fechar modal de histórico">&times;</button>
+            <h3 id="history-modal-title">Histórico de Movimentações</h3>
+            <h4 id="history-product-name-modal">Nome do Produto</h4>
+            <ul id="history-list"></ul>
+            <p id="no-history" class="empty-state-text" style="display:none;">Nenhuma movimentação registrada.</p>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
